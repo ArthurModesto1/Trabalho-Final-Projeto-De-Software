@@ -1,0 +1,32 @@
+@startuml com_uc04_checkin
+skinparam objectBorderColor #888
+skinparam objectBackgroundColor #EEF
+
+object "cliente: Cliente" as CLI
+object "auth: AuthController" as AUTH
+object "ctrl: CheckinCtrl" as CTRL
+object "msvc: MatriculaSvc" as MSVC
+object "mrep: MatriculaRepo" as MREP
+object "crep: CheckinRepo" as CREP
+object "cache: CacheRedis" as CACHE
+
+CLI --> AUTH   : 1: POST /auth/token {qrCode}
+AUTH --> CACHE : 2: get(qrCode)
+CACHE --> AUTH : 3: idCliente
+AUTH --> CLI   : 4: 200 OK – token JWT
+
+CLI --> CTRL   : 5: POST /checkins {token}
+CTRL --> MSVC  : 6: validarMatricula(idCliente)
+MSVC --> CACHE : 7: get(matricula:idCliente)
+CACHE --> MSVC : 8: null (cache miss)
+MSVC --> MREP  : 9: findAtivaByCliente(idCliente)
+MREP --> MSVC  : 10: Matricula{ATIVA}
+MSVC --> CACHE : 11: set(matricula:idCliente, TTL=300s)
+MSVC --> CTRL  : 12: matricula válida
+
+CTRL --> CREP  : 13: findTodayByCliente(idCliente)
+CREP --> CTRL  : 14: [] sem checkin hoje
+CTRL --> CREP  : 15: save(Checkin{idCliente, now})
+CREP --> CTRL  : 16: Checkin{id}
+CTRL --> CLI   : 17: 201 Created – check-in registrado
+@enduml

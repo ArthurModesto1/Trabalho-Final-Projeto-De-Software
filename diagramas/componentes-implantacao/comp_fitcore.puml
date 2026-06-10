@@ -1,0 +1,47 @@
+@startuml comp_fitcore
+package "API Gateway" {
+  [AuthController] - [Router]
+  [Router] - [RateLimiter]
+}
+
+package "Matrículas" {
+  [MatriculaCtrl] --> [PlanoSvc]
+  [MatriculaCtrl] --> [MatriculaRepo]
+  [PlanoSvc] --> [PlanoRepo]
+  [MatriculaCtrl] --> [NotifSvc]
+}
+
+package "Treinos" {
+  [TreinoCtrl] --> [ExercicioSvc]
+  [TreinoCtrl] --> [TreinoRepo]
+  [ExercicioSvc] --> [ExercicioRepo]
+}
+
+package "Agendamentos" {
+  [AulaCtrl] --> [AgendSvc]
+  [AulaCtrl] --> [AulaRepo]
+}
+
+package "Financeiro" {
+  [PagamentoCtrl] --> [FaturaSvc]
+  [PagamentoCtrl] --> [PagamentoRepo]
+  [FaturaSvc] --> [StripeAdapter]
+}
+
+package "Infrastructure" {
+  [PostgreSQL ORM]
+  [Redis Client]
+  [Migration Engine]
+}
+
+[Router] --> [MatriculaCtrl]
+[Router] --> [TreinoCtrl]
+[Router] --> [AulaCtrl]
+[Router] --> [PagamentoCtrl]
+
+[MatriculaRepo] --> [PostgreSQL ORM]
+[TreinoRepo] --> [PostgreSQL ORM]
+[AulaRepo] --> [PostgreSQL ORM]
+[PagamentoRepo] --> [PostgreSQL ORM]
+[AgendSvc] --> [Redis Client]
+@enduml

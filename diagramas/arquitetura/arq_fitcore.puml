@@ -1,0 +1,42 @@
+@startuml arquitetura
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_TOP_DOWN()
+
+Person(cliente, "Cliente", "Usuário final da academia")
+Person(admin, "Administrador", "Gestor do sistema")
+
+System_Boundary(fitcore, "Sistema FitCore") {
+  Container(mobile, "App Mobile", "React Native", "Acesso do cliente via smartphone")
+  Container(web, "Web App", "React + TypeScript", "Acesso administrativo via browser")
+  Container(gateway, "API Gateway", "Node.js", "Autenticação e roteamento de requisições")
+
+  Container(svc_mat, "Matrículas", "Node.js / Express", "Gestão de planos e matrículas")
+  Container(svc_tre, "Treinos", "Node.js / Express", "Fichas e rotinas de treino")
+  Container(svc_age, "Agendamentos", "Node.js / Express", "Reserva de aulas coletivas")
+  Container(svc_fin, "Financeiro", "Node.js / Express", "Pagamentos e mensalidades")
+
+  ContainerDb(db, "Banco de Dados", "PostgreSQL", "Persistência principal do sistema")
+  ContainerDb(cache, "Cache", "Redis", "Sessões e dados de alta frequência")
+}
+
+System_Ext(stripe, "Gateway Pagamento", "Stripe API")
+System_Ext(fcm, "Notificações", "Firebase FCM")
+
+Rel(cliente, mobile, "Usa", "HTTPS")
+Rel(admin, web, "Usa", "HTTPS")
+Rel(mobile, gateway, "Requisições", "REST/JSON")
+Rel(web, gateway, "Requisições", "REST/JSON")
+Rel(gateway, svc_mat, "Roteia")
+Rel(gateway, svc_tre, "Roteia")
+Rel(gateway, svc_age, "Roteia")
+Rel(gateway, svc_fin, "Roteia")
+Rel(svc_mat, db, "Lê/Escreve")
+Rel(svc_tre, db, "Lê/Escreve")
+Rel(svc_age, db, "Lê/Escreve")
+Rel(svc_fin, db, "Lê/Escreve")
+Rel(svc_age, cache, "Lê/Escreve")
+Rel(svc_fin, stripe, "Processa pagamento", "HTTPS")
+Rel(svc_mat, fcm, "Envia notificação", "HTTPS")
+
+@enduml

@@ -1,0 +1,19 @@
+@startuml contratar_plano
+actor Cliente
+participant ":FitCore" as S
+
+Cliente -> S: listarPlanos()
+S --> Cliente: lista de planos disponíveis
+
+Cliente -> S: selecionarPlano(idPlano)
+S --> Cliente: detalhes do plano
+
+Cliente -> S: confirmarContratacao(idPlano)
+S --> Cliente: contrato gerado
+
+Cliente -> S: efetuarPagamento(dadosPagamento)
+S --> Cliente: pagamento confirmado
+
+Cliente -> S: ativarMatricula()
+S --> Cliente: matrícula ativa
+@enduml

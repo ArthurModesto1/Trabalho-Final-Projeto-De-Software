@@ -1,0 +1,112 @@
+@startuml class_fitcore
+skinparam classAttributeIconSize 0
+
+abstract class Usuario {
+  - id: UUID
+  - nome: String
+  - email: String
+  - senha: String
+  - dataCadastro: Date
+  + login(): Boolean
+  + atualizarPerfil(): void
+}
+
+class Cliente {
+  - cpf: String
+  - telefone: String
+  - dataNascimento: Date
+  + realizarCheckin(): void
+  + agendarAula(): void
+}
+
+class Funcionario {
+  - cargo: String
+  - cref: String
+  - salario: Double
+  + cadastrarTreino(): void
+  + registrarCheckin(): void
+}
+
+class Matricula {
+  - id: UUID
+  - dataInicio: Date
+  - dataFim: Date
+  - status: StatusMatricula
+  + ativar(): void
+  + cancelar(): void
+}
+
+class Plano {
+  - id: UUID
+  - nome: String
+  - valor: Double
+  - duracaoDias: Integer
+  + calcularVencimento(): Date
+}
+
+class Pagamento {
+  - id: UUID
+  - valor: Double
+  - dataPagto: Date
+  - metodo: String
+  + processar(): Boolean
+}
+
+class Checkin {
+  - id: UUID
+  - dataHora: DateTime
+  - origem: String
+  + registrar(): void
+}
+
+class Agendamento {
+  - id: UUID
+  - dataReserva: DateTime
+  - status: StatusAgend
+  + cancelar(): void
+}
+
+class Aula {
+  - id: UUID
+  - nome: String
+  - dataHora: DateTime
+  - vagasTotal: Integer
+  + verificarVaga(): Boolean
+}
+
+class Treino {
+  - id: UUID
+  - descricao: String
+  - nivelDificuldade: String
+  + listarExercicios(): List
+}
+
+enum StatusMatricula {
+  ATIVA
+  SUSPENSA
+  CANCELADA
+  VENCIDA
+}
+
+enum StatusAgend {
+  CONFIRMADO
+  CANCELADO
+  REALIZADO
+}
+
+Usuario <|-- Cliente
+Usuario <|-- Funcionario
+
+Cliente "1" --> "0..*" Matricula
+Matricula "0..*" --> "1" Plano
+Matricula "1" --> "1..*" Pagamento
+Cliente "1" --> "0..*" Checkin
+Cliente "1" --> "0..*" Agendamento
+Agendamento "0..*" --> "1" Aula
+Funcionario "1" --> "0..*" Treino
+Funcionario "1" --> "0..*" Aula : ministra
+Treino "0..*" --> "0..*" Cliente : atribuído a
+Matricula --> StatusMatricula
+Agendamento --> StatusAgend
+
+@enduml

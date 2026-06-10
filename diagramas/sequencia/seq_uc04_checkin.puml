@@ -1,0 +1,50 @@
+@startuml seq_uc04_checkin
+skinparam sequenceArrowThickness 2
+
+actor Cliente
+participant "AuthController" as AUTH
+participant "CheckinCtrl" as CTRL
+participant "MatriculaSvc" as MSVC
+participant "MatriculaRepo" as MREP
+participant "CheckinRepo" as CREP
+participant "CacheRedis" as CACHE
+
+Cliente -> AUTH: POST /auth/token {qrCode}
+activate AUTH
+AUTH -> CACHE: get(qrCode)
+activate CACHE
+CACHE --> AUTH: idCliente
+deactivate CACHE
+AUTH --> Cliente: 200 OK – token JWT
+deactivate AUTH
+
+Cliente -> CTRL: POST /checkins {token}
+activate CTRL
+CTRL -> MSVC: validarMatricula(idCliente)
+activate MSVC
+MSVC -> CACHE: get(matricula:idCliente)
+activate CACHE
+CACHE --> MSVC: null (cache miss)
+deactivate CACHE
+MSVC -> MREP: findAtivaByCliente(idCliente)
+activate MREP
+MREP --> MSVC: Matricula{status: ATIVA, dataFim}
+deactivate MREP
+MSVC -> CACHE: set(matricula:idCliente, Matricula, TTL=300s)
+activate CACHE
+CACHE --> MSVC: ok
+deactivate CACHE
+MSVC --> CTRL: matricula válida
+deactivate MSVC
+
+CTRL -> CREP: findTodayByCliente(idCliente)
+activate CREP
+CREP --> CTRL: [] (sem checkin hoje)
+deactivate CREP
+CTRL -> CREP: save(Checkin{idCliente, dataHora: now, origem: APP})
+activate CREP
+CREP --> CTRL: Checkin{id}
+deactivate CREP
+CTRL --> Cliente: 201 Created – check-in registrado
+deactivate CTRL
+@enduml

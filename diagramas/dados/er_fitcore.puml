@@ -1,0 +1,118 @@
+@startuml er_fitcore
+!define TABLE(name,desc) class name as "desc" << (T,#FFAAAA) >>
+!define PK(x) <u>x</u>
+!define FK(x) <i>x</i>
+
+hide methods
+hide stereotypes
+
+skinparam class {
+  BackgroundColor #EEF
+  BorderColor #888
+  ArrowColor #555
+}
+
+TABLE(usuarios, "usuarios") {
+  PK(id): UUID
+  nome: VARCHAR(100)
+  email: VARCHAR(100)
+  senha_hash: VARCHAR(255)
+  tipo: ENUM(cliente, funcionario, admin)
+  data_cadastro: TIMESTAMP
+}
+
+TABLE(clientes, "clientes") {
+  PK(id): UUID
+  FK(usuario_id): UUID
+  cpf: VARCHAR(14)
+  telefone: VARCHAR(20)
+  data_nascimento: DATE
+}
+
+TABLE(funcionarios, "funcionarios") {
+  PK(id): UUID
+  FK(usuario_id): UUID
+  cargo: VARCHAR(50)
+  cref: VARCHAR(20)
+  salario: NUMERIC(10,2)
+}
+
+TABLE(planos, "planos") {
+  PK(id): UUID
+  nome: VARCHAR(80)
+  valor: NUMERIC(10,2)
+  duracao_dias: INTEGER
+  ativo: BOOLEAN
+}
+
+TABLE(matriculas, "matriculas") {
+  PK(id): UUID
+  FK(cliente_id): UUID
+  FK(plano_id): UUID
+  data_inicio: DATE
+  data_fim: DATE
+  status: ENUM(pendente,ativa,suspensa,vencida,cancelada)
+}
+
+TABLE(pagamentos, "pagamentos") {
+  PK(id): UUID
+  FK(matricula_id): UUID
+  valor: NUMERIC(10,2)
+  data_pagto: TIMESTAMP
+  metodo: VARCHAR(30)
+  status: ENUM(pendente,processando,pago,falhou,estornado,cancelado)
+  stripe_intent_id: VARCHAR(100)
+}
+
+TABLE(checkins, "checkins") {
+  PK(id): UUID
+  FK(cliente_id): UUID
+  data_hora: TIMESTAMP
+  origem: ENUM(app,totem,funcionario)
+}
+
+TABLE(aulas, "aulas") {
+  PK(id): UUID
+  FK(funcionario_id): UUID
+  nome: VARCHAR(80)
+  data_hora: TIMESTAMP
+  vagas_total: INTEGER
+  vagas_restantes: INTEGER
+}
+
+TABLE(agendamentos, "agendamentos") {
+  PK(id): UUID
+  FK(cliente_id): UUID
+  FK(aula_id): UUID
+  data_reserva: TIMESTAMP
+  status: ENUM(confirmado,cancelado,realizado,ausente)
+}
+
+TABLE(treinos, "treinos") {
+  PK(id): UUID
+  FK(funcionario_id): UUID
+  descricao: TEXT
+  nivel_dificuldade: ENUM(iniciante,intermediario,avancado)
+  data_criacao: TIMESTAMP
+}
+
+TABLE(treinos_clientes, "treinos_clientes") {
+  PK(id): UUID
+  FK(treino_id): UUID
+  FK(cliente_id): UUID
+  data_atribuicao: DATE
+}
+
+usuarios "1" --> "0..1" clientes       : usuario_id
+usuarios "1" --> "0..1" funcionarios   : usuario_id
+clientes "1" --> "0..*" matriculas     : cliente_id
+planos "1" --> "0..*" matriculas       : plano_id
+matriculas "1" --> "0..*" pagamentos   : matricula_id
+clientes "1" --> "0..*" checkins       : cliente_id
+funcionarios "1" --> "0..*" aulas      : funcionario_id
+clientes "1" --> "0..*" agendamentos   : cliente_id
+aulas "1" --> "0..*" agendamentos      : aula_id
+funcionarios "1" --> "0..*" treinos    : funcionario_id
+treinos "1" --> "0..*" treinos_clientes : treino_id
+clientes "1" --> "0..*" treinos_clientes : cliente_id
+@enduml

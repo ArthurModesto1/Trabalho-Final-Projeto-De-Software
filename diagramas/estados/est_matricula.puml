@@ -1,0 +1,24 @@
+@startuml est_matricula
+skinparam state {
+  BackgroundColor #EEF
+  BorderColor #888
+  ArrowColor #555
+}
+
+[*] --> Pendente : criarMatricula()
+
+Pendente --> Ativa : pagamentoConfirmado()
+Pendente --> Cancelada : cancelarPedido() /\ntimeout de pagamento
+
+Ativa --> Suspensa : inadimplencia() /\nbloqueioAdministrativo()
+Ativa --> Vencida : dataFim atingida
+Ativa --> Cancelada : solicitarCancelamento()
+
+Suspensa --> Ativa : regularizarPagamento()
+Suspensa --> Cancelada : prazoSuspensaoExpirado()
+
+Vencida --> Ativa : renovarMatricula() /\npagamentoConfirmado()
+Vencida --> Cancelada : naoRenovada()
+
+Cancelada --> [*]
+@enduml

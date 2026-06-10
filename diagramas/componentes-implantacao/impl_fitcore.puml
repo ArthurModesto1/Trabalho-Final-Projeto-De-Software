@@ -1,0 +1,51 @@
+@startuml impl_fitcore
+node "Smartphone" {
+  artifact "App Mobile\n(React Native)"
+}
+
+node "Computador" {
+  artifact "Web App\n(React + TS)"
+}
+
+cloud "AWS" {
+  node "CloudFront CDN" {
+    artifact "Assets estáticos"
+  }
+
+  node "API Gateway" {
+    artifact "Node.js / Nginx"
+  }
+
+  node "ECS Cluster" {
+    artifact "Matrículas :3001"
+    artifact "Treinos :3002"
+    artifact "Agendamentos :3003"
+    artifact "Financeiro :3004"
+  }
+
+  node "RDS" {
+    database "PostgreSQL 15"
+  }
+
+  node "ElastiCache" {
+    database "Redis 7"
+  }
+
+  artifact "S3 Bucket"
+}
+
+node "Externos" {
+  artifact "Stripe API"
+  artifact "Firebase FCM"
+}
+
+[App Mobile] --> [API Gateway] : HTTPS
+[Web App] --> [CloudFront CDN] : HTTPS
+[CloudFront CDN] --> [API Gateway]
+[API Gateway] --> [ECS Cluster]
+[ECS Cluster] --> [PostgreSQL 15]
+[ECS Cluster] --> [Redis 7]
+[ECS Cluster] ..> [S3 Bucket]
+[Financeiro :3004] ..> [Stripe API]
+[Matrículas :3001] ..> [Firebase FCM]
+@enduml

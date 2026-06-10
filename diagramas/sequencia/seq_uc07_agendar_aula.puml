@@ -1,0 +1,65 @@
+@startuml seq_uc07_agendar_aula
+skinparam sequenceArrowThickness 2
+
+actor Cliente
+participant "AulaCtrl" as CTRL
+participant "AgendSvc" as ASVC
+participant "AulaRepo" as AREP
+participant "AgendRepo" as AGREP
+participant "CacheRedis" as CACHE
+participant "NotifSvc" as NOTIF
+
+Cliente -> CTRL: GET /aulas?data=2026-06-10
+activate CTRL
+CTRL -> ASVC: listarAulasDisponiveis(data)
+activate ASVC
+ASVC -> CACHE: get(aulas:2026-06-10)
+activate CACHE
+CACHE --> ASVC: null (cache miss)
+deactivate CACHE
+ASVC -> AREP: findByDataComVaga(data)
+activate AREP
+AREP --> ASVC: List<Aula>
+deactivate AREP
+ASVC -> CACHE: set(aulas:2026-06-10, List<Aula>, TTL=60s)
+activate CACHE
+CACHE --> ASVC: ok
+deactivate CACHE
+ASVC --> CTRL: List<Aula>
+deactivate ASVC
+CTRL --> Cliente: 200 OK – lista de aulas
+deactivate CTRL
+
+Cliente -> CTRL: POST /agendamentos {idAula, idCliente}
+activate CTRL
+CTRL -> ASVC: agendarAula(idAula, idCliente)
+activate ASVC
+ASVC -> CACHE: get(vagas:idAula)
+activate CACHE
+CACHE --> ASVC: vagasRestantes: 3
+deactivate CACHE
+ASVC -> AGREP: findByClienteAndAula(idCliente, idAula)
+activate AGREP
+AGREP --> ASVC: null (sem agendamento existente)
+deactivate AGREP
+ASVC -> AREP: decrementarVaga(idAula)
+activate AREP
+AREP --> ASVC: vagasRestantes: 2
+deactivate AREP
+ASVC -> CACHE: set(vagas:idAula, 2, TTL=60s)
+activate CACHE
+CACHE --> ASVC: ok
+deactivate CACHE
+ASVC -> AGREP: save(Agendamento{idCliente, idAula, status: CONFIRMADO})
+activate AGREP
+AGREP --> ASVC: Agendamento{id}
+deactivate AGREP
+ASVC -> NOTIF: enviarLembrete(idCliente, aula)
+activate NOTIF
+NOTIF --> ASVC: ok
+deactivate NOTIF
+ASVC --> CTRL: Agendamento confirmado
+deactivate ASVC
+CTRL --> Cliente: 201 Created – agendamento confirmado
+deactivate CTRL
+@enduml

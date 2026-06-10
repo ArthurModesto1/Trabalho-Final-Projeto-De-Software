@@ -1,0 +1,20 @@
+@startuml est_agendamento
+skinparam state {
+  BackgroundColor #EEF
+  BorderColor #888
+  ArrowColor #555
+}
+
+[*] --> Confirmado : confirmarAgendamento() /\nvagaDisponivel()
+
+Confirmado --> Cancelado : cancelarAgendamento() /\naulaEncerradaPeloAdmin()
+Confirmado --> EmAndamento : aulaIniciada()
+Confirmado --> Ausente : aulaConcluida() /\nclienteNaoCompareceu()
+
+EmAndamento --> Realizado : aulaConcluida() /\nclientePresente()
+EmAndamento --> Ausente : aulaConcluida() /\nclienteNaoCompareceu()
+
+Cancelado --> [*]
+Realizado --> [*]
+Ausente --> [*]
+@enduml

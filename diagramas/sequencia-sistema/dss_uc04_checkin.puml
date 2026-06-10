@@ -1,0 +1,13 @@
+@startuml dss_uc04_checkin
+actor Cliente
+participant ":FitCore" as S
+
+Cliente -> S: solicitarCheckin()
+S --> Cliente: matrícula válida e ativa
+
+Cliente -> S: validarAcesso(idCliente)
+S --> Cliente: acesso permitido
+
+Cliente -> S: registrarCheckin(idCliente, dataHora)
+S --> Cliente: check-in confirmado
+@enduml

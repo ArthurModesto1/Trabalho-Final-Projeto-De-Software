@@ -1,0 +1,82 @@
+@startuml seq_uc03_contratar_plano
+skinparam sequenceArrowThickness 2
+skinparam participantPadding 10
+
+actor Cliente
+participant "MatriculaCtrl" as CTRL
+participant "PlanoSvc" as PSVC
+participant "MatriculaSvc" as MSVC
+participant "PlanoRepo" as PREP
+participant "MatriculaRepo" as MREP
+participant "PagamentoCtrl" as PCTRL
+participant "FaturaSvc" as FSVC
+participant "StripeAdapter" as STRIPE
+participant "NotifSvc" as NOTIF
+
+Cliente -> CTRL: GET /planos
+activate CTRL
+CTRL -> PSVC: listarPlanos()
+activate PSVC
+PSVC -> PREP: findAll()
+activate PREP
+PREP --> PSVC: List<Plano>
+deactivate PREP
+PSVC --> CTRL: List<Plano>
+deactivate PSVC
+CTRL --> Cliente: 200 OK – lista de planos
+deactivate CTRL
+
+Cliente -> CTRL: POST /matriculas {idPlano}
+activate CTRL
+CTRL -> MSVC: criarMatricula(idCliente, idPlano)
+activate MSVC
+MSVC -> PREP: findById(idPlano)
+activate PREP
+PREP --> MSVC: Plano
+deactivate PREP
+MSVC -> MREP: save(Matricula{status: PENDENTE})
+activate MREP
+MREP --> MSVC: Matricula
+deactivate MREP
+MSVC -> PCTRL: iniciarPagamento(matriculaId, valor)
+activate PCTRL
+PCTRL -> FSVC: gerarFatura(matriculaId, valor)
+activate FSVC
+FSVC -> STRIPE: createPaymentIntent(valor)
+activate STRIPE
+STRIPE --> FSVC: paymentIntent
+deactivate STRIPE
+FSVC --> PCTRL: Fatura
+deactivate FSVC
+PCTRL --> MSVC: faturaId
+deactivate PCTRL
+MSVC --> CTRL: {matriculaId, faturaId}
+deactivate MSVC
+CTRL --> Cliente: 201 Created – aguardando pagamento
+deactivate CTRL
+
+Cliente -> PCTRL: POST /pagamentos/confirmar {faturaId, dadosCartao}
+activate PCTRL
+PCTRL -> FSVC: processarPagamento(faturaId, dadosCartao)
+activate FSVC
+FSVC -> STRIPE: confirmPayment(paymentIntentId)
+activate STRIPE
+STRIPE --> FSVC: status: succeeded
+deactivate STRIPE
+FSVC --> PCTRL: Pagamento{status: PAGO}
+deactivate FSVC
+PCTRL -> MSVC: ativarMatricula(matriculaId)
+activate MSVC
+MSVC -> MREP: updateStatus(matriculaId, ATIVA)
+activate MREP
+MREP --> MSVC: ok
+deactivate MREP
+MSVC -> NOTIF: enviarConfirmacao(clienteId)
+activate NOTIF
+NOTIF --> MSVC: ok
+deactivate NOTIF
+MSVC --> PCTRL: ok
+deactivate MSVC
+PCTRL --> Cliente: 200 OK – matrícula ativa
+deactivate PCTRL
+@enduml

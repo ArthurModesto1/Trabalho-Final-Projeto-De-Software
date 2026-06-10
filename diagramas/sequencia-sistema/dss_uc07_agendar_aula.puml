@@ -1,0 +1,16 @@
+@startuml dss_uc07_agendar_aula
+actor Cliente
+participant ":FitCore" as S
+
+Cliente -> S: listarAulasDisponiveis()
+S --> Cliente: lista de aulas com vagas
+
+Cliente -> S: selecionarAula(idAula)
+S --> Cliente: detalhes da aula
+
+Cliente -> S: verificarVaga(idAula)
+S --> Cliente: vaga disponível
+
+Cliente -> S: confirmarAgendamento(idAula, idCliente)
+S --> Cliente: agendamento confirmado
+@enduml

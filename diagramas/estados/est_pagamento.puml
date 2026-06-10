@@ -1,0 +1,23 @@
+@startuml est_pagamento
+skinparam state {
+  BackgroundColor #EEF
+  BorderColor #888
+  ArrowColor #555
+}
+
+[*] --> Pendente : gerarFatura()
+
+Pendente --> Processando : iniciarPagamento(dadosCartao)
+
+Processando --> Pago : stripeConfirmou()
+Processando --> Falhou : stripeRecusou() /\nerroConexao()
+
+Falhou --> Pendente : tentarNovamente()
+Falhou --> Cancelado : limiteTentativasExcedido()
+
+Pago --> Estornado : solicitarEstorno()
+Pago --> [*]
+
+Estornado --> [*]
+Cancelado --> [*]
+@enduml

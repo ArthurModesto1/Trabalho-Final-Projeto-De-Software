@@ -1,0 +1,43 @@
+@startuml com_uc03_contratar_plano
+left to right direction
+skinparam objectBorderColor #888
+skinparam objectBackgroundColor #EEF
+
+object "cliente: Cliente" as CLI
+object "ctrl: MatriculaCtrl" as CTRL
+object "psvc: PlanoSvc" as PSVC
+object "msvc: MatriculaSvc" as MSVC
+object "prep: PlanoRepo" as PREP
+object "mrep: MatriculaRepo" as MREP
+object "pctrl: PagamentoCtrl" as PCTRL
+object "fsvc: FaturaSvc" as FSVC
+object "stripe: StripeAdapter" as STRIPE
+object "notif: NotifSvc" as NOTIF
+
+CLI --> CTRL       : 1: GET /planos
+CTRL --> PSVC      : 2: listarPlanos()
+PSVC --> PREP      : 3: findAll()
+PREP --> PSVC      : 4: List<Plano>
+PSVC --> CTRL      : 5: List<Plano>
+CTRL --> CLI       : 6: 200 OK
+
+CLI --> CTRL       : 7: POST /matriculas {idPlano}
+CTRL --> MSVC      : 8: criarMatricula(idCliente, idPlano)
+MSVC --> PREP      : 9: findById(idPlano)
+MSVC --> MREP      : 10: save(Matricula{PENDENTE})
+MSVC --> PCTRL     : 11: iniciarPagamento(matriculaId, valor)
+PCTRL --> FSVC     : 12: gerarFatura(matriculaId, valor)
+FSVC --> STRIPE    : 13: createPaymentIntent(valor)
+STRIPE --> FSVC    : 14: paymentIntent
+PCTRL --> MSVC     : 15: faturaId
+CTRL --> CLI       : 16: 201 Created
+
+CLI --> PCTRL      : 17: POST /pagamentos/confirmar {faturaId}
+PCTRL --> FSVC     : 18: processarPagamento(faturaId)
+FSVC --> STRIPE    : 19: confirmPayment(paymentIntentId)
+STRIPE --> FSVC    : 20: succeeded
+PCTRL --> MSVC     : 21: ativarMatricula(matriculaId)
+MSVC --> MREP      : 22: updateStatus(ATIVA)
+MSVC --> NOTIF     : 23: enviarConfirmacao(clienteId)
+PCTRL --> CLI      : 24: 200 OK – matrícula ativa
+@enduml

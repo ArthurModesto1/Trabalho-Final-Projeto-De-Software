@@ -1,0 +1,49 @@
+@startuml UC_FitCore
+left to right direction
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EEF
+  BorderColor #888
+}
+
+actor "Cliente" as CLI
+actor "Funcionário" as FUNC
+actor "Administrador" as ADM
+
+rectangle "FitCore — Sistema de Gestão de Academia" {
+  usecase "UC-01 Realizar cadastro" as UC01
+  usecase "UC-02 Fazer login" as UC02
+  usecase "UC-03 Contratar plano" as UC03
+  usecase "UC-04 Realizar check-in" as UC04
+  usecase "UC-05 Visualizar treinos" as UC05
+  usecase "UC-06 Pagar mensalidade" as UC06
+  usecase "UC-07 Agendar aula" as UC07
+
+  usecase "UC-08 Registrar check-in" as UC08
+  usecase "UC-09 Cadastrar treino" as UC09
+  usecase "UC-10 Renovar matrícula" as UC10
+
+  usecase "UC-11 Gerenciar planos" as UC11
+  usecase "UC-12 Gerar relatórios" as UC12
+  usecase "UC-13 Gerenciar usuários" as UC13
+}
+
+CLI --> UC01
+CLI --> UC02
+CLI --> UC03
+CLI --> UC04
+CLI --> UC05
+CLI --> UC06
+CLI --> UC07
+
+FUNC --> UC08
+FUNC --> UC09
+FUNC --> UC10
+
+ADM --> UC11
+ADM --> UC12
+ADM --> UC13
+
+UC03 .> UC06 : <<include>>
+
+@enduml

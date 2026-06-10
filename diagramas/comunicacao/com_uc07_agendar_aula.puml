@@ -1,0 +1,37 @@
+@startuml com_uc07_agendar_aula
+left to right direction
+skinparam objectBorderColor #888
+skinparam objectBackgroundColor #EEF
+
+object "cliente: Cliente" as CLI
+object "ctrl: AulaCtrl" as CTRL
+object "asvc: AgendSvc" as ASVC
+object "arep: AulaRepo" as AREP
+object "agrep: AgendRepo" as AGREP
+object "cache: CacheRedis" as CACHE
+object "notif: NotifSvc" as NOTIF
+
+CLI --> CTRL    : 1: GET /aulas?data=2026-06-10
+CTRL --> ASVC   : 2: listarAulasDisponiveis(data)
+ASVC --> CACHE  : 3: get(aulas:data)
+CACHE --> ASVC  : 4: null (cache miss)
+ASVC --> AREP   : 5: findByDataComVaga(data)
+AREP --> ASVC   : 6: List<Aula>
+ASVC --> CACHE  : 7: set(aulas:data, TTL=60s)
+ASVC --> CTRL   : 8: List<Aula>
+CTRL --> CLI    : 9: 200 OK
+
+CLI --> CTRL    : 10: POST /agendamentos {idAula, idCliente}
+CTRL --> ASVC   : 11: agendarAula(idAula, idCliente)
+ASVC --> CACHE  : 12: get(vagas:idAula)
+CACHE --> ASVC  : 13: vagasRestantes: 3
+ASVC --> AGREP  : 14: findByClienteAndAula(idCliente, idAula)
+AGREP --> ASVC  : 15: null (sem duplicata)
+ASVC --> AREP   : 16: decrementarVaga(idAula)
+ASVC --> CACHE  : 17: set(vagas:idAula, 2)
+ASVC --> AGREP  : 18: save(Agendamento{CONFIRMADO})
+AGREP --> ASVC  : 19: Agendamento{id}
+ASVC --> NOTIF  : 20: enviarLembrete(idCliente, aula)
+ASVC --> CTRL   : 21: Agendamento confirmado
+CTRL --> CLI    : 22: 201 Created
+@enduml
